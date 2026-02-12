@@ -1,89 +1,88 @@
-import { supabase } from "@/lib/supabase";
+import { createServerSupabase } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import StatusGrid from "@/components/admin/StatusGrid";
 import OccupancyChart from "@/components/admin/OccupancyChart";
 import RevenueChart from "@/components/admin/RevenueChart";
 
-
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const { data: rooms } = await supabase
+  // 1. Pastikan pemanggilan createServerSupabase sesuai dengan library Anda.
+  // Jika menggunakan @supabase/ssr atau auth-helpers versi terbaru, 
+  // fungsi ini seringkali tidak memerlukan 'await' di level inisialisasi client.
+  const supabase = await createServerSupabase();
+
+  // 2. Mengambil data kamar dari database
+  const { data: rooms, error } = await supabase
     .from("rooms")
     .select("*")
     .order("nomor_kamar", { ascending: true });
 
-  const totalKamar = rooms?.length || 0;
-  const kamarTerisi =
-    rooms?.filter((r) => r.status === "booked").length || 0;
+  // Penanganan jika ada error database agar tidak crash
+  if (error) {
+    console.error("Error fetching rooms:", error);
+  }
 
-  const tingkatHunian =
-    totalKamar > 0
-      ? ((kamarTerisi / totalKamar) * 100).toFixed(1)
-      : 0;
+  // 3. Kalkulasi data untuk KPI
+  const safeRooms = rooms || [];
+  const totalKamar = safeRooms.length;
+  const kamarTerisi = safeRooms.filter((r) => r.status === "booked").length;
+  const tingkatHunian = totalKamar > 0 ? ((kamarTerisi / totalKamar) * 100).toFixed(1) : "0";
 
   return (
     <div className="space-y-10">
-      {/* Header */}
+      {/* Header Section */}
       <div>
-        <h1 className="text-3xl font-bold">
-          Dashboard
-        </h1>
-        <p className="text-gray-600">
-          Selamat datang di sistem manajemen Wisma Amri
-        </p>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-gray-600">Selamat datang di sistem manajemen Wisma Amri</p>
       </div>
 
-      {/* KPI */}
+      {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-500 text-sm">
-              Total Kamar
-            </p>
-            <h2 className="text-3xl font-bold">
-              {totalKamar}
-            </h2>
+            <p className="text-gray-500 text-sm">Total Kamar</p>
+            <h2 className="text-3xl font-bold">{totalKamar}</h2>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-500 text-sm">
-              Kamar Terisi
-            </p>
-            <h2 className="text-3xl font-bold text-red-500">
-              {kamarTerisi}
-            </h2>
+            <p className="text-gray-500 text-sm">Kamar Terisi</p>
+            <h2 className="text-3xl font-bold text-red-500">{kamarTerisi}</h2>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-500 text-sm">
-              Tingkat Hunian
-            </p>
-            <h2 className="text-3xl font-bold text-blue-600">
-              {tingkatHunian}%
-            </h2>
+            <p className="text-gray-500 text-sm">Tingkat Hunian</p>
+            <h2 className="text-3xl font-bold text-blue-600">{tingkatHunian}%</h2>
           </CardContent>
         </Card>
       </div>
 
-      {/* STATUS GRID */}
+      {/* Status Kamar Section */}
       <div>
-  <h2 className="text-xl font-semibold mb-4">
-    Status Kamar
-  </h2>
+        <h2 className="text-xl font-semibold mb-4">Status Kamar</h2>
+        {/* Menggunakan safeRooms untuk memastikan array tidak null */}
+        <StatusGrid initialRooms={safeRooms} />
+      </div>
 
-  <StatusGrid initialRooms={rooms} />
-</div>
-{/* CHART SECTION */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <OccupancyChart rooms={rooms} />
-  <RevenueChart rooms={rooms} />
-</div>
+      {/* CHART SECTION dengan MIN-H */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Card dengan min-h dan overflow-hidden untuk kestabilan chart */}
+        <Card className="min-h-[400px] flex flex-col overflow-hidden">
+          <CardContent className="p-6 flex-1 w-full">
+            <OccupancyChart rooms={safeRooms} />
+          </CardContent>
+        </Card>
 
+        <Card className="min-h-[400px] flex flex-col overflow-hidden">
+          <CardContent className="p-6 flex-1 w-full">
+            <RevenueChart rooms={safeRooms} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

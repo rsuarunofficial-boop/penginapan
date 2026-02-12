@@ -1,34 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+// Pastikan path ini sesuai dengan file yang sudah kita perbaiki sebelumnya
+import { createClientSupabase } from "@/lib/supabase/client"; 
 import { Users } from "lucide-react";
 
 export default function StatusGrid({ initialRooms }: any) {
   const [rooms, setRooms] = useState(initialRooms);
+  
+  // PERBAIKAN: Inisialisasi client supabase di dalam komponen
+  const supabase = createClientSupabase();
 
   const toggleStatus = async (room: any) => {
     const newStatus =
       room.status === "booked" ? "available" : "booked";
 
+    // Sekarang variabel 'supabase' sudah terdefinisi
     const { error } = await supabase
       .from("rooms")
       .update({ status: newStatus })
       .eq("id", room.id);
 
-    if (!error) {
-      setRooms((prev: any) =>
-        prev.map((r: any) =>
-          r.id === room.id
-            ? { ...r, status: newStatus }
-            : r
-        )
-      );
+    if (error) {
+      console.error("Gagal update status:", error.message);
+      return;
     }
+
+    // Update state lokal agar UI berubah seketika
+    setRooms((prev: any) =>
+      prev.map((r: any) =>
+        r.id === room.id
+          ? { ...r, status: newStatus }
+          : r
+      )
+    );
   };
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
       {rooms?.map((room: any) => {
         const isBooked = room.status === "booked";
 
@@ -55,7 +64,7 @@ export default function StatusGrid({ initialRooms }: any) {
             </div>
 
             {/* Kapasitas */}
-            <div className="flex items-center justify-center gap-1 text-xs mt-2">
+            <div className="flex items-center justify-center gap-1 text-xs mt-2 opacity-70">
               <Users size={14} />
               {room.kapasitas} orang
             </div>

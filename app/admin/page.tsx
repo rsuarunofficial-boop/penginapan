@@ -1,50 +1,69 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { createClientSupabase } from '@/lib/supabase/client'
 
 export default function AdminLogin() {
   const router = useRouter()
+  const supabase = createClientSupabase() // ✅ WAJIB ADA
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      alert('Email dan password wajib diisi')
+      return
+    }
+
+    setLoading(true)
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-    if (!error) {
-      router.push('/admin/dashboard')
-    } else {
-      alert('Login gagal')
+    setLoading(false)
+
+    if (error) {
+      alert(error.message)
+      return
     }
+
+    router.push('/admin/dashboard')
   }
 
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="border p-8 rounded w-80">
-        <h1 className="text-2xl font-bold mb-4">Login Admin</h1>
+    <div className="flex h-screen items-center justify-center bg-gray-100">
+      <div className="bg-white border p-8 rounded w-80 shadow">
+        <h1 className="text-2xl font-bold mb-4 text-center">
+          Login Admin
+        </h1>
 
         <input
-          className="border w-full mb-3 p-2"
+          type="email"
+          className="border w-full mb-3 p-2 rounded"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
           type="password"
-          className="border w-full mb-3 p-2"
+          className="border w-full mb-4 p-2 rounded"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
         <button
           onClick={handleLogin}
-          className="bg-black text-white w-full p-2 rounded"
+          disabled={loading}
+          className="bg-black text-white w-full p-2 rounded hover:bg-gray-800 disabled:opacity-50"
         >
-          Login
+          {loading ? 'Loading...' : 'Login'}
         </button>
       </div>
     </div>

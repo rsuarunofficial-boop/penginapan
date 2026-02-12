@@ -1,17 +1,28 @@
-import { supabase } from "@/lib/supabase";
+import { createServerSupabase } from "@/lib/supabase/server";
 import RoomCard from "@/components/RoomCard";
 import Navbar from "@/components/Navbar";
 
 export const dynamic = "force-dynamic";
+
 export default async function Home() {
-  const { data: rooms } = await supabase.from("rooms").select("*");
+  const supabase = await createServerSupabase();
+
+  const { data: rooms, error } = await supabase
+    .from("rooms")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching rooms:", error);
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <Navbar />
 
       {/* HERO */}
-      <section className="h-[60vh] bg-cover bg-center flex items-center justify-center text-white"
+      <section
+        className="h-[60vh] bg-cover bg-center flex items-center justify-center text-white"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1566073771259-6a8506099945')",
@@ -33,11 +44,17 @@ export default async function Home() {
           Daftar Kamar
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {rooms?.map((room) => (
-            <RoomCard key={room.id} room={room} />
-          ))}
-        </div>
+        {rooms && rooms.length > 0 ? (
+          <div className="grid md:grid-cols-3 gap-8">
+            {rooms.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">
+            Belum ada kamar tersedia.
+          </p>
+        )}
       </section>
 
       {/* KONTAK */}

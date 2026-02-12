@@ -19,7 +19,7 @@ export default function Navbar() {
             Kontak
           </Link>
           <Link
-            href="/admin"
+            href="/login"
             className="px-4 py-2 rounded-lg bg-black text-white hover:opacity-90 transition"
           >
             Admin
