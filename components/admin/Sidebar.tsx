@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase/client";
 
-// PERBAIKAN 1: Tambahkan interface agar Sidebar mengenali props dari layout.tsx
+// ✅ Interface sudah benar, memastikan kompatibilitas dengan layout.tsx
 interface SidebarProps {
   closeSidebar?: () => void;
 }
@@ -16,17 +16,30 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // State untuk loading logout
 
-  // Fungsi internal untuk menutup sidebar baik dari state lokal maupun props parent
+  // Fungsi internal untuk menutup sidebar
   const handleClose = () => {
     setIsOpen(false);
     if (closeSidebar) closeSidebar();
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    try {
+      setIsLoggingOut(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+
+      // Gunakan router.replace agar user tidak bisa kembali ke halaman admin via tombol 'back'
+      router.replace("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Error logging out:", error);
+      alert("Gagal keluar dari akun.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const menuItems = [
@@ -37,11 +50,12 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
   return (
     <>
       {/* ===== Mobile Top Bar ===== */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-white shadow-sm sticky top-0 z-30">
-        <h1 className="font-bold text-lg">Admin Panel</h1>
+      <div className="md:hidden flex items-center justify-between p-4 bg-white shadow-sm sticky top-0 z-30 w-full border-b">
+        <h1 className="font-bold text-lg text-blue-600">Admin Panel</h1>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition"
+          className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-700"
+          aria-label="Toggle Menu"
         >
           {isOpen ? "✕" : "☰"}
         </button>
@@ -50,7 +64,7 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
       {/* ===== Overlay (Mobile) ===== */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-300 backdrop-blur-sm"
           onClick={handleClose}
         />
       )}
@@ -68,17 +82,16 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
       >
         {/* ===== Top Section ===== */}
         <div>
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-xl font-bold text-blue-600">
+          <div className="flex items-center justify-between mb-10">
+            <h1 className="text-2xl font-extrabold text-blue-600 tracking-tight">
               Wisma Amri
             </h1>
-            {/* Tombol tutup tambahan untuk mobile di dalam sidebar */}
-            <button onClick={handleClose} className="md:hidden text-gray-500">
+            <button onClick={handleClose} className="md:hidden text-gray-400 hover:text-gray-600">
               ✕
             </button>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
 
@@ -88,10 +101,10 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
                   href={item.href}
                   onClick={handleClose}
                   className={`
-                    flex items-center px-4 py-3 rounded-xl font-medium transition-all
+                    flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${
                       isActive
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.02]"
                         : "text-gray-600 hover:bg-gray-50 hover:text-blue-600"
                     }
                   `}
@@ -107,9 +120,10 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
         <div className="border-t pt-4">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-4 py-3 rounded-xl text-red-600 font-semibold hover:bg-red-50 transition-colors"
+            disabled={isLoggingOut}
+            className="w-full flex items-center px-4 py-3 rounded-xl text-red-600 font-semibold hover:bg-red-50 transition-all disabled:opacity-50"
           >
-            Logout
+            {isLoggingOut ? "Keluar..." : "Logout"}
           </button>
         </div>
       </aside>
