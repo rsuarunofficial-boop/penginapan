@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import RoomCard from "@/components/RoomCard";
 import Navbar from "@/components/Navbar";
 
+export const dynamic = "force-dynamic";
 export default async function Home() {
   const { data: rooms } = await supabase.from("rooms").select("*");
 
