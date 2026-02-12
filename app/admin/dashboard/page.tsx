@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import StatusGrid from "@/components/admin/StatusGrid";
 import OccupancyChart from "@/components/admin/OccupancyChart";
 import RevenueChart from "@/components/admin/RevenueChart";
+import ReloadButton from "@/components/admin/ReloadButton";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +33,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-10">
       {/* Header Section */}
-      <div>
+      <div className="flex justify-between items-start">
+        <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-600">Selamat datang di sistem manajemen Wisma Amri</p>
+        <p className="text-gray-600">Selamat datang di sistem manajemen Wisma Amri</p>    
       </div>
+        <ReloadButton /> {/* Pasang di sini */}</div>
+      
 
       {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
