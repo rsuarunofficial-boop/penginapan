@@ -1,73 +1,83 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
+  PieChart,
+  Pie,
+  Cell,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
-  Cell,
+  Legend,
 } from "recharts";
 
-export default function OccupancyChart({ rooms }: any) {
-  // State untuk memastikan komponen sudah terpasang di browser (Client-side)
-  const [mounted, setMounted] = useState(false);
+interface OccupancyChartProps {
+  rooms: any[];
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const total = rooms?.length || 0;
-  const booked = rooms?.filter(
-    (r: any) => r.status === "booked"
-  ).length || 0;
-  const available = total - booked;
+export default function OccupancyChart({ rooms }: OccupancyChartProps) {
+  // Mengolah data untuk menghitung jumlah kamar tersedia vs terisi
+  const stats = rooms.reduce(
+    (acc, room) => {
+      if (room.status === "booked") {
+        acc.booked += 1;
+      } else {
+        acc.available += 1;
+      }
+      return acc;
+    },
+    { booked: 0, available: 0 }
+  );
 
   const data = [
-    { name: "Terisi", value: booked, color: "#ef4444" }, // Merah (Tailwind red-500)
-    { name: "Tersedia", value: available, color: "#3b82f6" }, // Biru (Tailwind blue-500)
+    { name: "Terisi", value: stats.booked },
+    { name: "Tersedia", value: stats.available },
   ];
 
-  // Jika belum mounted (SSR), tampilkan kontainer kosong dengan tinggi tetap
-  // agar layout tidak bergeser (layout shift) saat hydration.
-  if (!mounted) {
-    return (
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Tingkat Hunian</h2>
-        <div className="w-full h-[300px] flex items-center justify-center bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-400">Memuat Chart...</p>
-        </div>
-      </div>
-    );
-  }
+  // Warna: Merah untuk Terisi, Hijau/Emerald untuk Tersedia
+  const COLORS = ["#ef4444", "#10b981"];
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="text-lg font-semibold mb-4">
-        Tingkat Hunian
-      </h2>
-
-      <div style={{ width: "100%", height: 300 }}>
-        {/* Tambahkan minWidth={0} untuk menghilangkan warning di terminal */}
-        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip 
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-            />
-            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="w-full h-[350px] mt-4">
+      <h3 className="text-lg font-semibold mb-4 text-gray-700 text-center md:text-left">
+        Persentase Hunian
+      </h3>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="45%"
+            innerRadius={70}
+            outerRadius={100}
+            paddingAngle={5}
+            dataKey="value"
+          >
+            {data.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={COLORS[index % COLORS.length]} 
+                stroke="none"
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+            }}
+            /* PERBAIKAN UNTUK VERCEL: 
+               Memastikan formatter menerima nilai yang valid untuk menghindari Type Error 
+            */
+            formatter={(value: any) => [`${value} Kamar`, "Status"]}
+          />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36} 
+            iconType="circle"
+            formatter={(value) => <span className="text-sm font-medium text-gray-600">{value}</span>}
+          />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 }
