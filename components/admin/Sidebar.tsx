@@ -26,6 +26,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const menuItems = [
     { name: "Dashboard", href: "/admin/dashboard" },
     { name: "Manajemen Kamar", href: "/admin/kamar" },
+    { name: "Keuangan", href: "/admin/keuangan" }, // Menu Baru
   ];
 
   return (
