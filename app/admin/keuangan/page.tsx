@@ -258,7 +258,7 @@ export default function KeuanganPage() {
                       {isIncome ? <ArrowUpCircle size={22} /> : <ArrowDownCircle size={22} />}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 leading-tight">
+                      <p className="text-gray-900 leading-tight">
                         {t.room_number === "NON-KAMAR" ? t.guest_name : `Pembayaran ${t.guest_name} - Kamar ${t.room_number}`}
                       </p>
                       <p className="text-xs text-gray-500 mt-1 font-medium">
@@ -267,7 +267,7 @@ export default function KeuanganPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <p className={`font-black text-right ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <p className={`font-bold text-right ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
                       {isIncome ? "+" : "-"} Rp {Math.abs(t.amount).toLocaleString('id-ID')}
                     </p>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
