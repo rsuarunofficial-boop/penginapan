@@ -13,40 +13,26 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div
-        className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform
-          ${open ? "translate-x-0" : "-translate-x-full"}
-          transition-transform duration-300
-          md:translate-x-0 md:static md:shadow-none
-        `}
-      >
-        <Sidebar closeSidebar={() => setOpen(false)} />
-      </div>
+      {/* Sidebar hanya sebagai menu tarik */}
+      <Sidebar isOpen={open} setIsOpen={setOpen} />
 
-      {/* Overlay (mobile) */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 md:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col">
-        {/* Mobile Header */}
-        <header className="md:hidden bg-white shadow p-4 flex items-center">
-          <button onClick={() => setOpen(true)}>
-            <Menu />
+      <div className="flex-1 flex flex-col min-w-0 h-screen">
+        {/* Header Mobile - Diletakkan di Layout Utama */}
+        <header className="md:hidden flex items-center px-4 h-16 bg-white border-b shadow-sm z-30 shrink-0">
+          <button 
+            onClick={() => setOpen(true)}
+            className="p-2 hover:bg-gray-100 rounded-md text-gray-600"
+          >
+            <Menu size={24} />
           </button>
-          <h1 className="ml-4 font-bold">
-            Wisma Amri
-          </h1>
+          <h1 className="ml-3 font-bold text-blue-600 text-lg">Wisma Amri</h1>
         </header>
 
-        <main className="flex-1 p-6">
-          {children}
+        {/* Konten Dashboard - Sekarang akan muncul di bawah header karena flex-col */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="max-w-7xl mx-auto pb-20 md:pb-0">
+            {children}
+          </div>
         </main>
       </div>
     </div>
