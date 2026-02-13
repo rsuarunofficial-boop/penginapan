@@ -7,7 +7,7 @@ interface FinancialChartProps {
 }
 
 export default function FinancialChart({ transactions }: FinancialChartProps) {
-  // Mengelompokkan data berdasarkan bulan untuk grafik
+  // PROSES DATA: Mengelompokkan berdasarkan bulan dan memisahkan Pemasukan/Pengeluaran
   const monthlyData = transactions.reduce((acc: any[], curr: any) => {
     const date = new Date(curr.created_at);
     const month = date.toLocaleString('id-ID', { month: 'short' });
@@ -17,10 +17,8 @@ export default function FinancialChart({ transactions }: FinancialChartProps) {
     
     if (existing) {
       if (amount > 0) {
-        // Jika positif, tambahkan ke pemasukan
         existing.pemasukan += amount;
       } else {
-        // Jika negatif, ubah jadi positif (Math.abs) untuk ditampilkan di grafik pengeluaran
         existing.pengeluaran += Math.abs(amount);
       }
     } else {
@@ -33,7 +31,6 @@ export default function FinancialChart({ transactions }: FinancialChartProps) {
     return acc;
   }, []);
 
-  // Membalikkan urutan agar bulan tertua di kiri dan terbaru di kanan
   const sortedData = [...monthlyData].reverse();
 
   return (
@@ -57,7 +54,11 @@ export default function FinancialChart({ transactions }: FinancialChartProps) {
           <Tooltip 
             cursor={{ fill: '#f9fafb' }}
             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-            formatter={(value: number) => `Rp ${value.toLocaleString('id-ID')}`}
+            // PERBAIKAN DI SINI: Menambahkan pengecekan tipe data untuk memuaskan TypeScript
+            formatter={(value: any) => {
+              const numValue = Number(value);
+              return !isNaN(numValue) ? `Rp ${numValue.toLocaleString('id-ID')}` : 'Rp 0';
+            }}
           />
           <Legend 
             verticalAlign="top" 
